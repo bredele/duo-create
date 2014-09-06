@@ -1,31 +1,50 @@
 #!/usr/bin/env node
 
+/**
+ * Module dependencies.
+ */
 
-var Command = require('commander').Command;
+var program = require('commander');
+var component = require('..');
+var utils = component.utils;
+var path = require('path');
+var fs = require('fs');
+var join = path.join;
+var basename = path.basename;
+var extname = path.extname;
+var read = fs.readFileSync;
+var readdir = fs.readdirSync;
+var exists = fs.existsSync;
 var mkdir = require('mkdirp').sync;
+var readme = require('../templates/readme');
 
+// usage
 
-/**
- * Program
- */
+program.usage('[dir]');
 
-var program = new Command('duo-create')
-  .usage('[dir]')
-  .option('-t, --test <test>', 'add test environment')
-  .version(pkg.version);
+// options
 
+program
+  .option('-l, --local', 'create a local private component')
+  .parse(process.argv);
 
-/**
- * Parse
- */
+// config
 
-program.parse(process.argv);
+var conf = {};
 
-
-// set base directory
+// dest
 
 var dir = program.args[0] || '.';
 
+// --local
+
+var local = program.local;
+
+// already a component
+
+if (exists(join(dir, 'component.json'))) {
+  utils.fatal(dir + ' is already a component');
+}
 
 /**
  * Verbose write.
@@ -40,17 +59,25 @@ function write(path, str) {
   }
 }
 
+// private / public prompts
 
-// prompt
-
-var prompt = {
-  name: 'name: ',
-  desc: 'description: ',
-  js: 'does this component have js? ',
-  css: 'does this component have css? ',
-  html: 'does this component have html? '
-};
-
+if (local) {
+  var prompt = {
+    name: 'name: ',
+    desc: 'description: ',
+    js: 'does this component have js? ',
+    css: 'does this component have css? ',
+    html: 'does this component have html? '
+  };
+} else {
+  var prompt = {
+    repo: 'repo (username/project): ',
+    desc: 'description: ',
+    js: 'does this component have js? ',
+    css: 'does this component have css? ',
+    html: 'does this component have html? '
+  };
+}
 
 // prompt
 
@@ -128,3 +155,49 @@ program.prompt(prompt, function(obj){
   console.log();
   process.exit();
 });
+
+/**
+ * Booleans from `str`.
+ */
+
+function yes(str) {
+  return /^y(es)?/i.test(str);
+}
+
+function no(str) {
+  return /^n(o)?/i.test(str);
+}
+
+/**
+ * Create a makefile.
+ */
+
+function createMakefile(obj) {
+  var buf = '\n';
+  var tpl = basename(obj.html, extname(obj.html));
+
+  // build target
+  buf += 'build: components';
+  if (yes(obj.js)) buf += ' index.js';
+  else if (!no(obj.js)) buf += ' ' + obj.js;
+
+  if (yes(obj.css)) buf += ' ' + obj.name + '.css';
+  else if (!no(obj.css)) buf += ' ' + obj.css;
+
+  if (yes(obj.html)) buf += ' template.html';
+  else if (!no(obj.html)) buf += ' ' + obj.html;
+  buf += '\n\t@component build --dev\n\n';
+
+  // components target
+  buf += 'components: component.json\n';
+  buf += '\t@component install --dev\n\n';
+
+  // clean phony
+  buf += 'clean:\n';
+  buf += '\trm -fr build components template.js\n\n';
+
+  // PHONY
+  buf += '.PHONY: clean\n';
+
+  return buf;
+}
