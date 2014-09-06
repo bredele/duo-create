@@ -10,7 +10,7 @@ var path = require('path');
 var fs = require('fs');
 var join = path.join;
 var exists = fs.existsSync;
-var mkdir = require('mkdirp').sync;
+var mkdirp = require('mkdirp').sync;
 var readme = require('../templates/readme');
 
 // usage
@@ -20,6 +20,7 @@ program.usage('[dir]');
 // options
 
 program
+  .option('-t, --test <test>', 'test your component with duo-test')
   .parse(process.argv);
 
 // config
@@ -44,35 +45,34 @@ function write(path, str) {
   }
 }
 
+function mkdir() {
+	mkdirp(path.join.apply(path, arguments));
+}
+
 
 var prompt = {
   name: 'name: ',
-  js: 'does this component have js?',
-  css: 'does this component have css?'
+  js: 'does this component have js? ',
+  css: 'does this component have css? '
 };
 
 // prompt
 
 program.prompt(prompt, function(obj){
   var name = obj.name;
-
-  // populate json
-  conf.name = name;
-  conf.version = "0.0.1";
-  conf.dependencies = {};
-  conf.license = "MIT";
+  var test = program.test;
 
   // dir
   console.log();
   utils.log('create', dir);
   mkdir(dir);
-  // note: mkdirp should join folders
-  mkdir(dir + '/lib');
+  mkdir(dir, 'lib');
+  if(test) mkdir(dir, 'test');
 
   // js
-  if (yes(obj.js)) write(join(dir + '/lib', 'index.js'), '');
-  if (yes(obj.css)) write(join(dir + '/lib','index.css'), '');
-
+  if(yes(obj.js)) write(join(dir + '/lib', 'index.js'), '');
+  if(yes(obj.css)) write(join(dir + '/lib','index.css'), '');
+  if(test) write(join(dir + '/test', name + '.js'));
 
   write(join(dir, 'Makefile'), createMakefile(obj));
   write(join(dir, 'readme.md'), readme(obj));
