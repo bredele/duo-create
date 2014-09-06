@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+
+
+var Command = require('commander').Command;
+var mkdir = require('mkdirp').sync;
+
+
+/**
+ * Program
+ */
+
+var program = new Command('duo-create')
+  .usage('[dir]')
+  .option('-t, --test <test>', 'add test environment')
+  .version(pkg.version);
+
+
+/**
+ * Parse
+ */
+
+program.parse(process.argv);
+
+
+// set base directory
+
+var dir = program.args[0] || '.';
+
+
+/**
+ * Verbose write.
+ */
+
+function write(path, str) {
+  if (exists(path)) {
+    utils.warn('exists', path);
+  } else {
+    utils.log('create', path);
+    fs.writeFileSync(path, str);
+  }
+}
+
+
+// prompt
+
+var prompt = {
+  name: 'name: ',
+  desc: 'description: ',
+  js: 'does this component have js? ',
+  css: 'does this component have css? ',
+  html: 'does this component have html? '
+};
+
+
+// prompt
+
+program.prompt(prompt, function(obj){
+  if (local) {
+    var name = obj.name;
+  } else {
+    // repo
+    var repo = obj.repo.split('/');
+    if (2 != repo.length) throw new Error('repo must be <username>/<project>');
+
+    // name
+    var name = repo[1];
+  }
+
+  // populate json
+  conf.name = obj.name = name;
+  if (!local) conf.repo = repo.join('/');
+  conf.description = obj.desc;
+  if (!local) conf.version = "0.0.1";
+  if (!local) conf.keywords = [];
+  conf.dependencies = {};
+  conf.development = {};
+  if (!local) conf.license = "MIT";
+
+  // dir
+  console.log();
+  utils.log('create', dir);
+  mkdir(dir);
+
+  // js
+  if (yes(obj.js)) {
+    conf.main = "index.js";
+    conf.scripts = ["index.js"];
+    write(join(dir, 'index.js'), '');
+  } else if(!no(obj.js)) {
+    conf.main = obj.js;
+    conf.scripts = [obj.js];
+    write(join(dir, obj.js), '');
+  }
+
+  // html
+  if (yes(obj.html)) {
+    conf.templates = ['template.html'];
+    write(join(dir, 'template.html'), '');
+  } else if(!no(obj.html)) {
+    conf.templates = [obj.html];
+    write(join(dir, obj.html), '');
+  }
+
+  // css
+  if (yes(obj.css)) {
+    conf.styles = [name + '.css'];
+    write(join(dir, name + '.css'), '');
+  } else if(!no(obj.css)) {
+    conf.styles = [obj.css];
+    write(join(dir, obj.css), '');
+  }
+
+  // makefile
+  if (!local) write(join(dir, 'Makefile'), createMakefile(obj));
+
+  // readme
+  if (!local) write(join(dir, 'Readme.md'), readme(obj));
+
+  // changelog
+  if (!local) write(join(dir, 'History.md'), '');
+
+  // .gitignore
+  if (!local) write(join(dir, '.gitignore'), 'components\nbuild\n');
+
+  // write component.json
+  write(join(dir, 'component.json'), JSON.stringify(conf, null, 2));
+
+  console.log();
+  process.exit();
+});

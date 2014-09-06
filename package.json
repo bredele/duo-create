@@ -16,6 +16,9 @@
     "plugin",
     "duojs"
   ],
+  "bin": {
+    "duo-create": "./bin/duo-create"
+  },
   "author": "Olivier Wietrich <olivier.wietrich@gmail.com> (http://github.com/bredele)",
   "license": "MIT",
   "bugs": {
