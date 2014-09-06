@@ -1,5 +1,16 @@
 
 /**
+ * Module dependencies.
+ */
+
+var path = require('path');
+var fs = require('fs');
+var join = path.join;
+var exists = fs.existsSync;
+var mkdirp = require('mkdirp').sync;
+
+
+/**
  * Output fatal error message and exit.
  *
  * @param {String} msg
@@ -54,4 +65,33 @@ exports.error = function(msg){
   var len = Math.max(0, w - type.length);
   var pad = Array(len + 1).join(' ');
   console.error('  \033[31m%s\033[m : \033[90m%s\033[m', pad + type, msg);
+};
+
+
+/**
+ * Verbose write.
+ *
+ * @param {String} path
+ * @param {String} str
+ * @api private
+ */
+
+exports.write = function(path, str) {
+  if (exists(path)) {
+    exports.warn('exists', path);
+  } else {
+    exports.log('create', path);
+    fs.writeFileSync(path, str);
+  }
+};
+
+
+/**
+ * A better mkdirp
+ * 
+ * @api private
+ */
+
+exports.mkdir = function() {
+  mkdirp(path.join.apply(path, arguments));
 };

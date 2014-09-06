@@ -5,12 +5,11 @@
  */
 
 var program = require('commander');
-var utils = require('../utils');
 var path = require('path');
-var fs = require('fs');
 var join = path.join;
-var exists = fs.existsSync;
-var mkdirp = require('mkdirp').sync;
+var utils = require('../utils');
+var write = utils.write;
+var mkdir = utils.mkdir;
 var readme = require('../templates/readme');
 
 // usage
@@ -30,24 +29,6 @@ var conf = {};
 // dest
 
 var dir = program.args[0] || '.';
-
-
-/**
- * Verbose write.
- */
-
-function write(path, str) {
-  if (exists(path)) {
-    utils.warn('exists', path);
-  } else {
-    utils.log('create', path);
-    fs.writeFileSync(path, str);
-  }
-}
-
-function mkdir() {
-	mkdirp(path.join.apply(path, arguments));
-}
 
 
 var prompt = {
