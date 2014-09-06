@@ -47,8 +47,8 @@ function write(path, str) {
 
 var prompt = {
   name: 'name: ',
-  js: 'does this component have js? (y/n)',
-  css: 'does this component have css? (y/n)'
+  js: 'does this component have js?',
+  css: 'does this component have css?'
 };
 
 // prompt
