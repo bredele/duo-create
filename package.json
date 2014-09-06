@@ -1,0 +1,25 @@
+{
+  "name": "duo-create",
+  "version": "0.0.0",
+  "description": "create duo components",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bredele/duo-create.git"
+  },
+  "keywords": [
+    "duo",
+    "create",
+    "plugin",
+    "duojs"
+  ],
+  "author": "Olivier Wietrich <olivier.wietrich@gmail.com> (http://github.com/bredele)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bredele/duo-create/issues"
+  },
+  "homepage": "https://github.com/bredele/duo-create"
+}
