@@ -9,10 +9,6 @@ var utils = require('../utils');
 var path = require('path');
 var fs = require('fs');
 var join = path.join;
-var basename = path.basename;
-var extname = path.extname;
-var read = fs.readFileSync;
-var readdir = fs.readdirSync;
 var exists = fs.existsSync;
 var mkdir = require('mkdirp').sync;
 var readme = require('../templates/readme');
@@ -51,8 +47,8 @@ function write(path, str) {
 
 var prompt = {
   name: 'name: ',
-  js: 'does this component have js? ',
-  css: 'does this component have css? '
+  js: 'does this component have js? (y/n)',
+  css: 'does this component have css? (y/n)'
 };
 
 // prompt
@@ -62,38 +58,21 @@ program.prompt(prompt, function(obj){
 
   // populate json
   conf.name = name;
-  //if (!local) conf.repo = repo.join('/');
   conf.version = "0.0.1";
-  conf.keywords = [];
   conf.dependencies = {};
-  conf.development = {};
   conf.license = "MIT";
 
   // dir
   console.log();
   utils.log('create', dir);
   mkdir(dir);
+  // note: mkdirp should join folders
   mkdir(dir + '/lib');
 
   // js
-  if (yes(obj.js)) {
-    conf.main = "index.js";
-    conf.scripts = ["index.js"];
-    write(join(dir + '/lib', 'index.js'), '');
-  } else if(!no(obj.js)) {
-    conf.main = obj.js;
-    conf.scripts = [obj.js];
-    write(join(dir, obj.js), '');
-  }
+  if (yes(obj.js)) write(join(dir + '/lib', 'index.js'), '');
+  if (yes(obj.css)) write(join(dir + '/lib','index.css'), '');
 
-  // css
-  if (yes(obj.css)) {
-    conf.styles = [name + '.css'];
-    write(join(dir + '/lib',name + '.css'), '');
-  } else if(!no(obj.css)) {
-    conf.styles = [obj.css];
-    write(join(dir, obj.css), '');
-  }
 
   write(join(dir, 'Makefile'), createMakefile(obj));
   write(join(dir, 'readme.md'), readme(obj));
@@ -112,40 +91,10 @@ function yes(str) {
   return /^y(es)?/i.test(str);
 }
 
-function no(str) {
-  return /^n(o)?/i.test(str);
-}
-
 /**
  * Create a makefile.
  */
 
 function createMakefile(obj) {
-  var buf = '\n';
-  var tpl = basename(obj.html, extname(obj.html));
-
-  // build target
-  buf += 'build: components';
-  if (yes(obj.js)) buf += ' index.js';
-  else if (!no(obj.js)) buf += ' ' + obj.js;
-
-  if (yes(obj.css)) buf += ' ' + obj.name + '.css';
-  else if (!no(obj.css)) buf += ' ' + obj.css;
-
-  if (yes(obj.html)) buf += ' template.html';
-  else if (!no(obj.html)) buf += ' ' + obj.html;
-  buf += '\n\t@component build --dev\n\n';
-
-  // components target
-  buf += 'components: component.json\n';
-  buf += '\t@component install --dev\n\n';
-
-  // clean phony
-  buf += 'clean:\n';
-  buf += '\trm -fr build components template.js\n\n';
-
-  // PHONY
-  buf += '.PHONY: clean\n';
-
-  return buf;
+  return '';
 }
